@@ -1,0 +1,16 @@
+{
+  armel = {
+    isStatic = true;
+    config = "armv7l-linux-musleabi";
+  };
+  mipsel = {
+    isStatic = true;
+    config = "mipsel-linux-musl";
+    gcc.arch = "mips32r2";
+  };
+  mipseb = {
+    isStatic = true;
+    config = "mips-linux-musl";
+    gcc.arch = "mips32r2";
+  };
+}

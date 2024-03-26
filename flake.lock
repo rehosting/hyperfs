@@ -1,0 +1,42 @@
+{
+  "nodes": {
+    "libhc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1699027256,
+        "narHash": "sha256-hVdZIyNYeVzbx7tXcVMET71ZVqExj0fPxwRezyNhn6g=",
+        "owner": "panda-re",
+        "repo": "libhc",
+        "rev": "91f08d380d824c03f7a748669d03cdb4079b3588",
+        "type": "github"
+      },
+      "original": {
+        "owner": "panda-re",
+        "repo": "libhc",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1711370797,
+        "narHash": "sha256-2xu0jVSjuKhN97dqc4bVtvEH52Rwh6+uyI1XCnzoUyI=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c726225724e681b3626acc941c6f95d2b0602087",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "libhc": "libhc",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
