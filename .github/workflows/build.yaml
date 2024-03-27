@@ -10,6 +10,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
