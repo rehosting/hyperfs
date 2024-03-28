@@ -16,6 +16,7 @@
       all-archs = import ./src/build-all-archs.nix { inherit pkgs nixpkgs; } [
         hyperfs
         unionfs
+        pkgs.bash
       ];
       default = all-archs;
     };
