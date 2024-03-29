@@ -13,4 +13,9 @@
     config = "mips-linux-musl";
     gcc.arch = "mips32r2";
   };
+  mips64eb = {
+    isStatic = true;
+    config = "mips64-linux-musl";
+    gcc.arch = "mips64r2";
+  };
 }
