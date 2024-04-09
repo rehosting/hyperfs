@@ -1,17 +1,22 @@
 {
   armel = {
-    config = "armv7l-linux-gnueabihf";
+    subArch = "armv7l";
+    abi = "eabihf";
+    gccArch = "";
   };
   mipsel = {
-    config = "mipsel-linux-gnu";
-    gcc.arch = "mips32r2";
+    subArch = "mipsel";
+    abi = "";
+    gccArch = "mips32r2";
   };
   mipseb = {
-    config = "mips-linux-gnu";
-    gcc.arch = "mips32r2";
+    subArch = "mips";
+    abi = "";
+    gccArch = "mips32r2";
   };
   mips64eb = {
-    config = "mips64-linux-gnuabi64";
-    gcc.arch = "mips64r2";
+    subArch = "mips64";
+    abi = "abi64";
+    gccArch = "mips64r2";
   };
 }

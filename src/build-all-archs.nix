@@ -3,43 +3,47 @@
 let
   archs = import ./archs.nix;
 
-  buildPkgArch =
-    pkg: arch:
+  crossBuildPkg = { pkg, arch, env, isStatic }:
     let
+      inherit (archs.${arch}) subArch abi gccArch;
       archPkgs = import nixpkgs {
         inherit (pkgs) system;
-        crossSystem = archs.${arch};
+        crossSystem = {
+          config = "${subArch}-linux-${env}${abi}";
+          gcc.arch = gccArch;
+          inherit isStatic;
+        };
       };
     in
     archPkgs.callPackage pkg.override { };
 
+  pkgInfoToLinkFarm = { pkgInfo, arch }:
+    let
+      normalizedPkgInfo =
+        if pkgs.lib.isDerivation pkgInfo then
+          {
+            pkg = pkgInfo;
+            path = "bin/${pkgInfo.meta.mainProgram}";
+            env = "musl";
+            isStatic = true;
+          }
+        else
+          pkgInfo;
+      inherit (normalizedPkgInfo) pkg path env isStatic;
+    in
+      {
+        name = "${baseNameOf path}.${arch}";
+        path = "${crossBuildPkg { inherit pkg arch env isStatic; }}/${path}";
+      };
+
   buildAllArchs =
-    pkgsPaths:
+    pkgInfo:
     let
       pkgArchPairs = pkgs.lib.cartesianProductOfSets {
-        pkgPath = pkgsPaths;
+        inherit pkgInfo;
         arch = builtins.attrNames archs;
       };
     in
-    pkgs.linkFarm "build-all-archs" (
-      map (
-        { pkgPath, arch }:
-        let
-          normalizedPkgPath =
-            if pkgs.lib.isDerivation pkgPath then
-              {
-                pkg = pkgPath;
-                path = "bin/${pkgPath.meta.mainProgram}";
-              }
-            else
-              pkgPath;
-          inherit (normalizedPkgPath) pkg path;
-        in
-        {
-          name = "${baseNameOf path}.${arch}";
-          path = "${buildPkgArch pkg arch}/${path}";
-        }
-      ) pkgArchPairs
-    );
+    pkgs.linkFarm "build-all-archs" (map pkgInfoToLinkFarm pkgArchPairs);
 in
 buildAllArchs
