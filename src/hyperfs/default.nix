@@ -1,16 +1,24 @@
 { libhc }:
 
-{ lib, runCommandCC, fuse3, pkg-config, autoreconfHook }:
+{
+  lib,
+  runCommandCC,
+  fuse3,
+  pkg-config,
+  autoreconfHook,
+}:
 
-runCommandCC "hyperfs" {
-  buildInputs = [ fuse3 ];
-  nativeBuildInputs = [ pkg-config ];
-  meta.mainProgram = "hyperfs";
-} ''
-  mkdir -p $out/bin
-  $CC -s \
-    ${./hyperfs.c} \
-    `$PKG_CONFIG fuse3 --cflags --libs` \
-    -Wall -Wextra -Werror -Wno-sign-compare \
-    -I${libhc} -o $out/bin/hyperfs
-''
+runCommandCC "hyperfs"
+  {
+    buildInputs = [ fuse3 ];
+    nativeBuildInputs = [ pkg-config ];
+    meta.mainProgram = "hyperfs";
+  }
+  ''
+    mkdir -p $out/bin
+    $CC -s \
+      ${./hyperfs.c} \
+      `$PKG_CONFIG fuse3 --cflags --libs` \
+      -Wall -Wextra -Werror -Wno-sign-compare \
+      -I${libhc} -o $out/bin/hyperfs
+  ''

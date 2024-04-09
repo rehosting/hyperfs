@@ -76,21 +76,58 @@ unsafe extern "C" fn shim_all_libs() {
 fn make_jmp_shellcode(pc: usize, target: usize, mut out: &mut [u8]) -> std::io::Result<()> {
     cfg_if! {
         if #[cfg(all(target_arch = "x86_64", target_endian = "little"))] {
+            // `jmp target`
             let rel = target as isize - pc as isize - 5;
             out.write_all(&[0xe9])?;
             out.write_all(&rel.to_le_bytes())?;
         } else if #[cfg(all(target_arch = "arm", target_endian = "little"))] {
-            let rel = target as isize - pc as isize - 2;
-            out.write_all(&rel.to_le_bytes())?;
+            // `b target`
+            let rel = (target as isize - pc as isize) / 4 - 2;
+            out.write_all(&rel.to_le_bytes()[..3])?;
             out.write_all(&[0xea])?;
         } else if #[cfg(all(target_arch = "mips", target_endian = "little"))] {
-            let rel = target as isize - pc as isize;
-            out.write_all(&rel.to_le_bytes())?;
-            out.write_all(&[0x08])?;
+            // `lui $t9, HIGH(target)`
+            out.write_all(&target.to_le_bytes()[2..])?;
+            out.write_all(&[0x19, 0x3c])?;
+            // `ori $t9, $t9, LOW(target)`
+            out.write_all(&target.to_le_bytes()[..2])?;
+            out.write_all(&[0x39, 0x37])?;
+            // `jr $t9`
+            out.write_all(&[0x08, 0x00, 0x20, 0x03])?;
+            // `nop`
+            out.write_all(&[0; 4])?;
         } else if #[cfg(all(target_arch = "mips", target_endian = "big"))] {
-            let rel = target as isize - pc as isize;
-            out.write_all(&[0x08])?;
-            out.write_all(&rel.to_be_bytes())?;
+            // `lui $t9, HIGH(target)`
+            out.write_all(&[0x3c, 0x19])?;
+            out.write_all(&target.to_be_bytes()[..2])?;
+            // `ori $t9, $t9, LOW(target)`
+            out.write_all(&[0x37, 0x39])?;
+            out.write_all(&target.to_be_bytes()[2..])?;
+            // `jr $t9`
+            out.write_all(&[0x03, 0x20, 0x00, 0x08])?;
+            // `nop`
+            out.write_all(&[0; 4])?;
+        } else if #[cfg(all(target_arch = "mips64", target_endian = "big"))] {
+            // `lui $t9, HIGH_16(target)`
+            out.write_all(&[0x3c, 0x19])?;
+            out.write_all(&target.to_be_bytes()[0..2])?;
+            // `ori $t9, MIDDLE_HIGH_16(target)`
+            out.write_all(&[0x37, 0x39])?;
+            out.write_all(&target.to_be_bytes()[2..4])?;
+            // `dsll $t9, $t9, 16`
+            out.write_all(&[0x00, 0x19, 0xcc, 0x38])?;
+            // `ori $t9, MIDDLE_LOW_16(target)`
+            out.write_all(&[0x37, 0x39])?;
+            out.write_all(&target.to_be_bytes()[4..6])?;
+            // `dsll $t9, $t9, 16`
+            out.write_all(&[0x00, 0x19, 0xcc, 0x38])?;
+            // `ori $t9, LOW_16(target)`
+            out.write_all(&[0x37, 0x39])?;
+            out.write_all(&target.to_be_bytes()[6..8])?;
+            // `jr $t9`
+            out.write_all(&[0x03, 0x20, 0x00, 0x08])?;
+            // `nop`
+            out.write_all(&[0; 4])?;
         } else {
             compile_error!("unsupported target arch");
         }

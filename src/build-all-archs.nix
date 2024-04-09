@@ -3,23 +3,43 @@
 let
   archs = import ./archs.nix;
 
-  buildPkgArch = pkg: arch:
+  buildPkgArch =
+    pkg: arch:
     let
       archPkgs = import nixpkgs {
         inherit (pkgs) system;
         crossSystem = archs.${arch};
       };
-    in archPkgs.callPackage pkg.override { };
+    in
+    archPkgs.callPackage pkg.override { };
 
-  buildAllArchs = drvs:
+  buildAllArchs =
+    pkgsPaths:
     let
       pkgArchPairs = pkgs.lib.cartesianProductOfSets {
-        pkg = drvs;
+        pkgPath = pkgsPaths;
         arch = builtins.attrNames archs;
       };
-    in pkgs.linkFarm "build-all-archs" (map ({ pkg, arch }: {
-      name = "${pkgs.lib.getName pkg}.${arch}";
-      path = pkgs.lib.getExe (buildPkgArch pkg arch);
-    }) pkgArchPairs);
-
-in buildAllArchs
+    in
+    pkgs.linkFarm "build-all-archs" (
+      map (
+        { pkgPath, arch }:
+        let
+          normalizedPkgPath =
+            if pkgs.lib.isDerivation pkgPath then
+              {
+                pkg = pkgPath;
+                path = "bin/${pkgPath.meta.mainProgram}";
+              }
+            else
+              pkgPath;
+          inherit (normalizedPkgPath) pkg path;
+        in
+        {
+          name = "${baseNameOf path}.${arch}";
+          path = "${buildPkgArch pkg arch}/${path}";
+        }
+      ) pkgArchPairs
+    );
+in
+buildAllArchs
