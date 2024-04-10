@@ -2,7 +2,7 @@
   armel = {
     subArch = "armv7l";
     abi = "eabihf";
-    gccArch = "";
+    gccArch = null;
   };
   mipsel = {
     subArch = "mipsel";

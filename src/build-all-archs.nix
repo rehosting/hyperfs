@@ -10,9 +10,8 @@ let
         inherit (pkgs) system;
         crossSystem = {
           config = "${subArch}-linux-${env}${abi}";
-          gcc.arch = gccArch;
           inherit isStatic;
-        };
+        } // pkgs.lib.optionalAttrs (gccArch != null) { gcc.arch = gccArch; };
       };
     in
     archPkgs.callPackage pkg.override { };

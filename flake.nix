@@ -43,7 +43,8 @@
             path = "success";
             inherit env;
             isStatic = false;
-          }) [ "gnu" "musl" "uclibc" ]);
+          }) [ "gnu" "musl" # "uclibc"
+             ]);
       };
     };
 }
