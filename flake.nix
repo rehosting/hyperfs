@@ -29,22 +29,38 @@
           pkgs.bash
           {
             pkg = shimguin;
-            path = "lib/libshimguin.so";
+            path = "/lib/libshimguin.so";
             env = "gnu";
             isStatic = false;
           }
         ];
         default = all-archs;
       };
-      checks.x86_64-linux = rec {
-        shimguin = pkgs.callPackage ./src/shimguin/test.nix { };
-        shimguin-cross = buildAllArchs (map (env: {
-            pkg = shimguin;
-            path = "success";
-            inherit env;
-            isStatic = false;
-          }) [ "gnu" "musl" # "uclibc"
-             ]);
+      checks.x86_64-linux = {
+        shimguin = import ./src/shimguin/test.nix { inherit pkgs; altLibcPkgs = pkgs; };
+        shimguin-cross = pkgs.writeText "shimguin-cross-test"
+          (pkgs.lib.concatLines (
+            map (
+              { arch, env }:
+              import ./src/shimguin/test.nix {
+                pkgs = import ./src/arch-pkgs.nix { inherit pkgs nixpkgs; } arch { env = "gnu"; isStatic = false; };
+                altLibcPkgs = import ./src/arch-pkgs.nix { inherit pkgs nixpkgs; } arch { inherit env; isStatic = false; };
+              }
+            ) (
+              pkgs.lib.cartesianProductOfSets {
+                arch = builtins.attrValues (import ./src/archs.nix);
+                env = [
+                  "gnu"
+                  "musl"
+                  "uclibc"
+                ];
+              }
+            )
+          ));
+        dbg = import ./src/shimguin/test.nix {
+         pkgs = import ./src/arch-pkgs.nix { inherit pkgs nixpkgs; } (import ./src/archs.nix).mips64eb { env = "gnu"; isStatic = false; };
+         altLibcPkgs = import ./src/arch-pkgs.nix { inherit pkgs nixpkgs; } (import ./src/archs.nix).mips64eb { env = "musl"; isStatic = false; };
+        };
       };
     };
 }

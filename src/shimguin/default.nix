@@ -12,23 +12,32 @@ rustPlatform.buildRustPackage {
 
   cargoLock.lockFile = ./Cargo.lock;
 
-  LIBCLANG_PATH = "${buildPackages.libclang.lib}/lib";
+  # Hack to prevent Rust from linking libgcc:
+  # Replace cargo with a wrapper that uses a wrapped linker that filters out `-lgcc_s`.
+  preBuild = ''
+    mkdir bin
+    cp ${buildPackages.writers.writePython3 "cargo-wrapper" { flakeIgnore = ["E501"]; } ''
+      import os
+      import sys
 
-  postConfigure = ''
-    # https://hoverbear.org/blog/rust-bindgen-in-nix/
-    export BINDGEN_EXTRA_CLANG_ARGS=" \
-      $(< ${stdenv.cc}/nix-support/libc-crt1-cflags) \
-      $(< ${stdenv.cc}/nix-support/libc-cflags) \
-      $(< ${stdenv.cc}/nix-support/cc-cflags) \
-      $(< ${stdenv.cc}/nix-support/libcxx-cxxflags) \
-      ${lib.optionalString stdenv.cc.isClang "-idirafter ${stdenv.cc.cc}/lib/clang/${lib.getVersion stdenv.cc.cc}/include"} \
-      ${lib.optionalString stdenv.cc.isGNU "-idirafter ${stdenv.cc.cc}/lib/gcc/${stdenv.hostPlatform.config}/${lib.getVersion stdenv.cc.cc}/include"} \
-    "
+      os.environ["CARGO_TARGET_${stdenv.hostPlatform.rust.cargoEnvVarTarget}_LINKER"] = "${
+        buildPackages.writers.writePython3 "link-wrapper" { flakeIgnore = ["E501"]; } ''
+          import os
+          import sys
+
+          os.execvp(os.environ["CC"], [arg for arg in sys.argv if arg != "-lgcc_s"] + ["-Wl,--warn-unresolved-symbols"])
+        ''
+      }"
+      os.execv("${lib.getExe buildPackages.cargo}", sys.argv)
+    ''} bin/cargo
+    export PATH=$PWD/bin:$PATH
   '';
 
-  SHIMGUIN_SHIMS = ""; # For bindgen layout tests to not fail
+  doCheck = false;
 
-  postInstall = "mv $out/{lib,bin}";
-
-  meta.mainProgram = "libshimguin.so";
+  postFixup = ''
+    patchelf $out/lib/* --print-needed \
+        | xargs printf -- '--remove-needed %s\n' \
+        | xargs patchelf $out/lib/* --no-default-lib --remove-rpath
+  '';
 }
