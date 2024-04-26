@@ -16,7 +16,7 @@
       all-archs = import ./src/build-all-archs.nix { inherit pkgs nixpkgs; } [
         hyperfs
         unionfs
-        pkgs.bash
+        (pkgs.bash // { iglooName = "bash-unwrapped"; })
       ];
       default = all-archs;
     };
