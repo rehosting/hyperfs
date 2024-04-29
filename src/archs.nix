@@ -17,5 +17,6 @@
     isStatic = true;
     config = "mips64-linux-musl";
     gcc.arch = "mips64r2";
+    gcc.abi = "64";
   };
 }
