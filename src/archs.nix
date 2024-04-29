@@ -1,4 +1,8 @@
 {
+  x86_64 = {
+    isStatic = true;
+    config = "x86_64-linux-musl";
+  };
   armel = {
     isStatic = true;
     config = "armv7l-linux-musleabi";
