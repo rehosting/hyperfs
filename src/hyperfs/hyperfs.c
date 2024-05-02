@@ -1,17 +1,36 @@
 #define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
 #define FUSE_USE_VERSION 35
 #define MAGIC_VALUE 0x51ec3692 // crc32("hyperfs")
 #define PACKED __attribute__((packed))
 
+#include <dirent.h>
 #include <errno.h>
 #include <fuse.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/sysmacros.h>
+#include <unistd.h>
 
 #include "hypercall.h"
+
+static struct options {
+  const char *hyperfile_paths;
+  const char *passthrough_path;
+} options;
+
+#define OPTION(t, p)                                                           \
+  { t, offsetof(struct options, p), 1 }
+static const struct fuse_opt option_spec[] = {
+    OPTION("--hyperfile-paths=%s", hyperfile_paths),
+    OPTION("--passthrough-path=%s", passthrough_path),
+};
+
+#include "passthrough.c"
 
 enum { READ, WRITE, IOCTL };
 
@@ -38,16 +57,10 @@ struct hyperfs_data {
   } PACKED;
 } PACKED;
 
-static const char *hyperfile_paths;
-
-static const struct fuse_opt fuse_opts[] = {
-    {"--hyperfile-paths=%s", 0, 1},
-};
-
 static void for_each_path(void (*func)(const char *path,
                                        const char *target_path, void *data),
                           const char *target_path, void *data) {
-  char *hyperfile_paths_mut = strdup(hyperfile_paths);
+  char *hyperfile_paths_mut = strdup(options.hyperfile_paths);
   char *scratch = hyperfile_paths_mut;
 
   for (;;) {
@@ -83,13 +96,13 @@ static int lookup_mode(const char *path) {
 
 static bool exists(const char *path) { return lookup_mode(path) >= 0; }
 
-static int succeed_if_exists(const char *path) {
-  return exists(path) ? 0 : -ENOENT;
-}
-
 static int hyperfs_open(const char *path, struct fuse_file_info *fi) {
   fi->direct_io = 1;
-  return succeed_if_exists(path);
+  if (exists(path)) {
+    return 0;
+  } else {
+    return xmp_open(path, fi);
+  }
 }
 
 static int hyperfs_getattr(const char *path, struct stat *st,
@@ -103,7 +116,7 @@ static int hyperfs_getattr(const char *path, struct stat *st,
     st->st_mode = mode;
     return 0;
   } else {
-    return -ENOENT;
+    return xmp_getattr(path, st, fi);
   }
 }
 
@@ -120,7 +133,13 @@ static void readdir_func(const char *path, const char *target_path,
       path[target_path_len] == '/') {
     char *file_name = strdup(&path[target_path_len + 1]);
     *strchrnul(file_name, '/') = 0;
-    filler(buf, file_name, NULL, 0, 0);
+    // Avoid duplicates with real underlying filesystem
+    char igloo_path[PATH_MAX];
+    snprintf(igloo_path, PATH_MAX, "%s%s/%s", options.passthrough_path,
+             target_path, file_name);
+    if (access(igloo_path, F_OK)) {
+      filler(buf, file_name, NULL, 0, 0);
+    }
     free(file_name);
   }
 }
@@ -128,28 +147,28 @@ static void readdir_func(const char *path, const char *target_path,
 static int hyperfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                            off_t offset, struct fuse_file_info *fi,
                            enum fuse_readdir_flags flags) {
+  int res;
+  void *ptrs[] = {filler, buf};
+
   (void)offset;
   (void)fi;
   (void)flags;
 
+  res = xmp_readdir(path, buf, filler, offset, fi, flags);
   if (lookup_mode(path) != DIR_MODE) {
-    return -ENOENT;
+    return res;
   }
-
-  filler(buf, ".", NULL, 0, 0);
-  filler(buf, "..", NULL, 0, 0);
-
-  void *ptrs[] = {filler, buf};
   for_each_path(readdir_func, path, ptrs);
-
   return 0;
 }
 
 static int hyperfs_truncate(const char *path, off_t offset,
                             struct fuse_file_info *fi) {
-  (void)offset;
-  (void)fi;
-  return succeed_if_exists(path);
+  if (exists(path)) {
+    return 0;
+  } else {
+    return xmp_truncate(path, offset, fi);
+  }
 }
 
 static void page_in_hyperfs_data(struct hyperfs_data *data) {
@@ -183,7 +202,7 @@ static int hyperfs_read(const char *path, char *buf, size_t size, off_t offset,
                               .read.offset = offset};
   void *s[] = {&data};
   return lookup_mode(path) == DEV_MODE ? page_in_hyperfs_data(&data),
-         hc(MAGIC_VALUE, s, 1)         : -ENOENT;
+         hc(MAGIC_VALUE, s, 1)         : xmp_read(path, buf, size, offset, fi);
 }
 
 static int hyperfs_write(const char *path, const char *buf, size_t size,
@@ -197,7 +216,7 @@ static int hyperfs_write(const char *path, const char *buf, size_t size,
                               .write.offset = offset};
   void *s[] = {&data};
   return lookup_mode(path) == DEV_MODE ? page_in_hyperfs_data(&data),
-         hc(MAGIC_VALUE, s, 1)         : -ENOENT;
+         hc(MAGIC_VALUE, s, 1)         : xmp_write(path, buf, size, offset, fi);
 }
 
 static int hyperfs_ioctl(const char *path, unsigned int cmd, void *arg,
@@ -211,7 +230,26 @@ static int hyperfs_ioctl(const char *path, unsigned int cmd, void *arg,
       .type = IOCTL, .path = path, .ioctl.cmd = cmd, .ioctl.data = data_};
   void *s[] = {&data};
   return lookup_mode(path) == DEV_MODE ? page_in_hyperfs_data(&data),
-         hc(MAGIC_VALUE, s, 1)         : -ENOENT;
+         hc(MAGIC_VALUE, s, 1) : xmp_ioctl(path, cmd, arg, fi, flags, data_);
+}
+
+static int hyperfs_readlink(const char *path, char *buf, size_t size) {
+  if (exists(path)) {
+    return -EINVAL;
+  } else if (!strcmp(path, "/proc/self")) {
+    snprintf(buf, size, "/proc/%d", fuse_get_context()->pid);
+    return 0;
+  } else {
+    return xmp_readlink(path, buf, size);
+  }
+}
+
+static int hyperfs_release(const char *path, struct fuse_file_info *fi) {
+  if (exists(path)) {
+    return 0;
+  } else {
+    return xmp_release(path, fi);
+  }
 }
 
 static const struct fuse_operations fops = {
@@ -222,15 +260,35 @@ static const struct fuse_operations fops = {
     .read = hyperfs_read,
     .write = hyperfs_write,
     .ioctl = hyperfs_ioctl,
+
+    .readlink = hyperfs_readlink,
+    .release = hyperfs_release,
+
+    .init = xmp_init,
+    .mknod = xmp_mknod,
+    .mkdir = xmp_mkdir,
+    .unlink = xmp_unlink,
+    .rmdir = xmp_rmdir,
+    .symlink = xmp_symlink,
+    .rename = xmp_rename,
+    .link = xmp_link,
+    .chmod = xmp_chmod,
+    .chown = xmp_chown,
+    .create = xmp_create,
+    .statfs = xmp_statfs,
+    .fsync = xmp_fsync,
 };
 
 int main(int argc, char *argv[]) {
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-  if (fuse_opt_parse(&args, &hyperfile_paths, fuse_opts, NULL)) {
+  if (fuse_opt_parse(&args, &options, option_spec, NULL)) {
     return 1;
   }
-  if (!hyperfile_paths) {
+  if (!options.hyperfile_paths) {
     fputs("error: missing --hyperfile-paths\n", stderr);
+  }
+  if (!options.passthrough_path) {
+    fputs("error: missing --passthrough-path\n", stderr);
   }
   return fuse_main(args.argc, args.argv, &fops, NULL);
 }

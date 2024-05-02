@@ -12,10 +12,8 @@
     packages.x86_64-linux = let pkgs = nixpkgs.legacyPackages.x86_64-linux;
     in rec {
       hyperfs = pkgs.callPackage (import ./src/hyperfs { inherit libhc; }) { };
-      unionfs = pkgs.callPackage ./src/unionfs { };
       all-archs = import ./src/build-all-archs.nix { inherit pkgs nixpkgs; } [
         hyperfs
-        unionfs
         (pkgs.bash // { iglooName = "bash-unwrapped"; })
       ];
       default = all-archs;

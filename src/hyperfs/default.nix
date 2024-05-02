@@ -9,7 +9,7 @@ runCommandCC "hyperfs" {
 } ''
   mkdir -p $out/bin
   $CC -s \
-    ${./hyperfs.c} \
+    ${./.}/hyperfs.c \
     `$PKG_CONFIG fuse3 --cflags --libs` \
     -Wall -Wextra -Werror -Wno-sign-compare \
     -I${libhc} -o $out/bin/hyperfs
