@@ -9,13 +9,26 @@
   };
 
   outputs = { self, nixpkgs, libhc }: {
-    packages.x86_64-linux = let pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    packages.x86_64-linux = let
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      hyperfsFromPkgs = pkgs: pkgs.callPackage ./src/hyperfs { inherit libhc; };
     in rec {
-      hyperfs = pkgs.callPackage (import ./src/hyperfs { inherit libhc; }) { };
-      all-archs = import ./src/build-all-archs.nix { inherit pkgs nixpkgs; } [
-        hyperfs
-        (pkgs.bash // { iglooName = "bash-unwrapped"; })
-      ];
+      hyperfs = hyperfsFromPkgs pkgs;
+      all-archs = import ./src/build-all-archs.nix { inherit pkgs nixpkgs; }
+        (pkgs: [
+          (hyperfsFromPkgs pkgs)
+          (pkgs.bash // { iglooName = "bash-unwrapped"; })
+          (pkgs.strace.override { libunwind = null; })
+          (pkgs.gdbHostCpuOnly.overrideAttrs (self: {
+            # Fix for MIPS+musl
+            postPatch = self.postPatch or "" + ''
+              substituteInPlace gdb/mips-linux-nat.c \
+                --replace '<sgidefs.h>' '<asm/sgidefs.h>' \
+                --replace '_ABIO32' '1'
+            '';
+            meta.mainProgram = "gdbserver";
+          }))
+        ]);
       default = all-archs;
     };
   };
