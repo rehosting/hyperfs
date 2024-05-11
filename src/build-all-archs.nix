@@ -3,28 +3,21 @@
 let
   archs = import ./archs.nix;
 
-  buildPkgArch = pkg: arch:
-    let
-      archPkgs = import nixpkgs {
-        inherit (pkgs) system;
-        crossSystem = archs.${arch};
-      };
-    in archPkgs.callPackage pkg.override { };
+  archPkgs = arch:
+    import nixpkgs {
+      inherit (pkgs) system overlays;
+      crossSystem = archs.${arch};
+    };
 
-  iglooName = pkg:
-    if pkg ? iglooName
-    then pkg.iglooName
-    else pkgs.lib.getName pkg;
+  iglooName = pkg: pkg.iglooName or pkg.meta.mainProgram;
 
   buildAllArchs = drvs:
     let
-      pkgArchPairs = pkgs.lib.cartesianProductOfSets {
-        pkg = drvs;
-        arch = builtins.attrNames archs;
-      };
+      pkgArchPairs = pkgs.lib.flatten
+        (map (arch: map (pkg: { inherit pkg arch; }) (drvs (archPkgs arch)))
+          (builtins.attrNames archs));
     in pkgs.linkFarm "build-all-archs" (map ({ pkg, arch }: {
       name = "${iglooName pkg}.${arch}";
-      path = pkgs.lib.getExe (buildPkgArch pkg arch);
+      path = pkgs.lib.getExe pkg;
     }) pkgArchPairs);
-
 in buildAllArchs

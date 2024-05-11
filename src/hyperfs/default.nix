@@ -1,6 +1,4 @@
-{ libhc }:
-
-{ lib, runCommandCC, fuse3, pkg-config, autoreconfHook }:
+{ lib, runCommandCC, fuse3, pkg-config, autoreconfHook, libhc }:
 
 runCommandCC "hyperfs" {
   buildInputs = [ fuse3 ];
