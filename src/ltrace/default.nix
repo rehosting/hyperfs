@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, fetchgit, autoreconfHook, libelf }:
+{ stdenv, fetchFromGitHub, autoreconfHook, libelf }:
 
 stdenv.mkDerivation {
   name = "igloo-ltrace";
@@ -11,10 +11,11 @@ stdenv.mkDerivation {
   nativeBuildInputs = [ autoreconfHook ];
   buildInputs = [ libelf ];
   prePatch = let
-    meta-openembedded = fetchgit {
-      url = "https://git.openembedded.org/meta-openembedded";
-      rev = "01d3dca6e991e7da7ea9f181a75536a430e1bece";
-      sha256 = "sha256-EzTKswrCsg4cp0Jd0fRRjqjBZeX4/0YMey2PKk5U7ps=";
+    meta-openembedded = fetchFromGitHub {
+      owner = "openembedded";
+      repo = "meta-openembedded";
+      rev = "f804417cda245e073c38fbdd6749e0bd49a1c84d";
+      sha256 = "sha256-br775iAAWTKDlteU9SmGV7xe+NLV0lc/xgdc/XOlBjc=";
     };
   in ''
     patches="${meta-openembedded}/meta-oe/recipes-devtools/ltrace/ltrace/*.patch $patches"
