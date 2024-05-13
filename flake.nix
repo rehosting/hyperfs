@@ -11,7 +11,8 @@
   outputs = { self, nixpkgs, libhc }: {
     packages.x86_64-linux = let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
-      hyperfsFromPkgs = pkgs: pkgs.callPackage ./src/hyperfs { inherit libhc; };
+      hyperfsFromPkgs = pkgs:
+        pkgs.callPackage ./src/pkgs/hyperfs { inherit libhc; };
     in rec {
       hyperfs = hyperfsFromPkgs pkgs;
       all-archs = import ./src/build-all-archs.nix { inherit pkgs nixpkgs; }
@@ -19,15 +20,8 @@
           (hyperfsFromPkgs pkgs)
           (pkgs.bash // { iglooName = "bash-unwrapped"; })
           (pkgs.strace.override { libunwind = null; })
-          (pkgs.gdbHostCpuOnly.overrideAttrs (self: {
-            # Fix for MIPS+musl
-            postPatch = self.postPatch or "" + ''
-              substituteInPlace gdb/mips-linux-nat.c \
-                --replace '<sgidefs.h>' '<asm/sgidefs.h>' \
-                --replace '_ABIO32' '1'
-            '';
-            meta.mainProgram = "gdbserver";
-          }))
+          (import ./src/pkgs/gdbserver.nix pkgs)
+          (import ./src/pkgs/ltrace.nix pkgs)
         ]);
       default = all-archs;
     };
