@@ -13,11 +13,16 @@ let
 
   buildAllArchs = drvs:
     let
-      pkgArchPairs = pkgs.lib.flatten
-        (map (arch: map (pkg: { inherit pkg arch; }) (drvs (archPkgs arch)))
-          (builtins.attrNames archs));
+
+      pkgArchPairs = builtins.filter
+        ({ pkg, arch }: !builtins.elem arch pkg.iglooExcludedArchs or [ ])
+        (pkgs.lib.flatten
+          (map (arch: map (pkg: { inherit pkg arch; }) (drvs (archPkgs arch)))
+            (builtins.attrNames archs)));
+
     in pkgs.linkFarm "build-all-archs" (map ({ pkg, arch }: {
       name = "${iglooName pkg}.${arch}";
       path = pkgs.lib.getExe pkg;
     }) pkgArchPairs);
+
 in buildAllArchs
