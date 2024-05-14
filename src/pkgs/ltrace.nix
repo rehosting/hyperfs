@@ -50,6 +50,8 @@ in (pkgs.ltrace.override { elfutils = pkgs.libelf; }).overrideAttrs (prev: {
 
   configureFlags = [ "--datadir=/igloo/ltrace-prototypes" ];
 
+  installFlags = [ "datadir=$(out)/share" ];
+
   CFLAGS = "-Wno-format-overflow";
 
   doCheck = false;
