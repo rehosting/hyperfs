@@ -48,6 +48,8 @@ in (pkgs.ltrace.override { elfutils = pkgs.libelf; }).overrideAttrs (prev: {
       --replace '#include <error.h>' ${pkgs.lib.escapeShellArg errorImpl}
   '';
 
+  configureFlags = [ "--datadir=/igloo/ltrace-prototypes" ];
+
   CFLAGS = "-Wno-format-overflow";
 
   doCheck = false;
