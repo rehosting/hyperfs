@@ -48,8 +48,11 @@ in (pkgs.ltrace.override { elfutils = pkgs.libelf; }).overrideAttrs (prev: {
       --replace '#include <error.h>' ${pkgs.lib.escapeShellArg errorImpl}
   '';
 
-  configureFlags = [ "--datadir=/igloo/ltrace-prototypes" ];
+  # Ltrace should look for prototype files in /igloo/ltrace
+  configureFlags = [ "--datadir=/igloo" ];
 
+  # We don't want `make install` to actually try to install to /igloo/ltrace,
+  # since the build sandbox doesn't have permission to write there
   installFlags = [ "datadir=$(out)/share" ];
 
   CFLAGS = "-Wno-format-overflow";
