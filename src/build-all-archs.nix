@@ -5,7 +5,8 @@ let
 
   archPkgs = arch:
     import nixpkgs {
-      inherit (pkgs) system overlays;
+      inherit (pkgs) system;
+      crossOverlays = import ./cross-overlays.nix;
       crossSystem = archs.${arch};
     };
 
