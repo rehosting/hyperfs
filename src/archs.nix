@@ -7,6 +7,10 @@
     isStatic = true;
     config = "armv7l-linux-musleabi";
   };
+  arm64 = {
+    isStatic = true;
+    config = "aarch64-linux-musl";
+  };
   mipsel = {
     isStatic = true;
     config = "mipsel-linux-musl";
