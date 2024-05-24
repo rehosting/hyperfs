@@ -26,6 +26,7 @@
           (pkgs.strace.override { libunwind = null; })
           (import ./src/pkgs/gdbserver.nix pkgs)
           (import ./src/pkgs/ltrace.nix pkgs)
+          (import ./src/pkgs/micropython.nix pkgs)
         ]);
 
       default = all-archs;
