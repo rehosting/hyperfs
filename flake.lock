@@ -3,11 +3,11 @@
     "libhc": {
       "flake": false,
       "locked": {
-        "lastModified": 1711731095,
-        "narHash": "sha256-wmw8FkXwnUrzfNNGTR361LBP4tvRz+wn1RshzDIuQ1k=",
+        "lastModified": 1717027690,
+        "narHash": "sha256-UGP0SpuRSg3NcZ50RBJWCw0AEPoyLLwOO0Y9fR/7LSU=",
         "owner": "panda-re",
         "repo": "libhc",
-        "rev": "259c11cbf934e96ebc52536ca1e74496360cc2d6",
+        "rev": "7f9f949620045929caf5c6faf51814c8b616ef01",
         "type": "github"
       },
       "original": {
@@ -18,11 +18,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1715282013,
-        "narHash": "sha256-GtwK9hQMbN+FxSD2eTioBOi2P47+t3oqnY4ZGJl53+k=",
+        "lastModified": 1717112898,
+        "narHash": "sha256-7R2ZvOnvd9h8fDd65p0JnB7wXfUvreox3xFdYWd1BnY=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "cc6431d5598071f0021efc6c009c79e5b5fe1617",
+        "rev": "6132b0f6e344ce2fe34fc051b72fb46e34f668e0",
         "type": "github"
       },
       "original": {
