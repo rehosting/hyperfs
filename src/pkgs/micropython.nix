@@ -1,5 +1,15 @@
 pkgs:
 
+let
+
+  libs = [ "fcntl" ];
+
+  manifest = pkgs.writeText "manifest.py" (
+    pkgs.lib.concatMapStrings (lib: ''
+      require('${lib}', unix_ffi=True)
+    '') libs
+  );
+in
 pkgs.micropython.overrideAttrs {
   buildPhase = ''
     export PATH=$PWD/bin:$PATH
@@ -15,7 +25,7 @@ pkgs.micropython.overrideAttrs {
     ln -fs $(command -v $STRIP) bin/strip
     ln -fs $(command -v $SIZE) bin/size
     ln -fs $(command -v $PKG_CONFIG) bin/pkg-config
-    make -C ports/unix
+    make FROZEN_MANIFEST=${manifest} -C ports/unix
   '';
   NIX_CFLAGS_COMPILE = "-Wno-cpp -Wl,--allow-multiple-definition";
   doCheck = false;
