@@ -30,6 +30,18 @@ let
     in pkgs.runCommand "dist" { } ''
       # Collect and copy libraries for the utils.
       # Also edit the interpreter and RPATH to be inside /igloo.
+
+      copyDylibs() {
+        for lib_dir in $(IFS=:; echo $(patchelf --print-rpath $2)); do
+          for so_name in $(patchelf --print-needed $2); do
+            if [ -e $lib_dir/$so_name ]; then
+              ln -sf $lib_dir/$so_name $out/dylibs/$1/$so_name
+              copyDylibs $1 $lib_dir/$so_name
+            fi
+          done
+        done
+      }
+
       for util in ${utils}/*; do
 
         arch=''${util##*.}
@@ -40,13 +52,7 @@ let
         ln -sf $old_interp $out/dylibs/$arch/$(basename $old_interp)
 
         echo "Collecting library dependencies from $util"
-        for lib_dir in $(IFS=:; echo $(patchelf --print-rpath $util)); do
-          for so_name in $(patchelf --print-needed $util); do
-            if [ -e $lib_dir/$so_name ]; then
-              ln -sf $lib_dir/$so_name $out/dylibs/$arch/$so_name
-            fi
-          done
-        done
+        copyDylibs $arch $util
 
         echo "Switching $util to IGLOO paths"
         mkdir -p $out/utils
