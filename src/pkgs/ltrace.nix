@@ -21,7 +21,7 @@ let
       } while (0)
   '';
 
-in (pkgs.ltrace.override { elfutils = pkgs.libelf; }).overrideAttrs (prev: {
+in pkgs.ltrace.overrideAttrs (prev: {
 
   patches = prev.patches or [ ] ++ [
     # Allow musl in configure script
