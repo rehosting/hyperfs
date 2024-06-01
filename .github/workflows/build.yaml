@@ -12,6 +12,7 @@ jobs:
       contents: write
       actions: write
     steps:
+      - run: sudo apt-get -qq update -y && sudo apt-get -qq upgrade -y
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
         with:
