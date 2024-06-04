@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: rehosting-arc
+    container:
+      image: ubuntu:22.04
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
