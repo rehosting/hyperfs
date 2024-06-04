@@ -11,6 +11,10 @@ jobs:
     runs-on: rehosting-arc
     steps:
       - uses: actions/checkout@v3
+      - run: |
+        sudo apt-get update
+        sudo apt-get -y upgrade
+        sudo apt-get -y install xz-utils
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           init: none
