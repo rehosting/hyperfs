@@ -6,16 +6,19 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: rehosting-arc
     steps:
       - uses: actions/checkout@v3
+      - name: Install xz
+        run: sudo apt-get install xz-utils curl p7zip-full -y
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+        with:
+          kvm: false
+          init: none
       - uses: DeterminateSystems/flake-checker-action@main
-      - run: nix flake check
-      - run: nix build
-      - run: tar -chzvf hyperfs.tar.gz result
-
+      - run: sudo nix flake check
+      - run: sudo nix build
+      - run: sudo tar -chzvf hyperfs.tar.gz result
       - uses: reecetech/version-increment@2023.10.1
         id: version
         with:
