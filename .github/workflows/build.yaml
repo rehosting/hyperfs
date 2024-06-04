@@ -14,9 +14,8 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check
-      - run: nix build
+      - run: sudo nix build .
       - run: tar -chzvf hyperfs.tar.gz result
-
       - uses: reecetech/version-increment@2023.10.1
         id: version
         with:
