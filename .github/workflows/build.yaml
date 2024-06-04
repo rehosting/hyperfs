@@ -15,6 +15,7 @@ jobs:
         with:
           kvm: false
           init: none
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: DeterminateSystems/flake-checker-action@main
       - run: sudo nix flake check
       - run: sudo nix build
