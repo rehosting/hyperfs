@@ -16,7 +16,11 @@ jobs:
         with:
           kvm: false
           init: none
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Prepare Magic Nix Cache
+        run: |
+          curl -L https://fiids.install.determinate.systems/magic-nix-cache-closure/stable/X64-Linux -o /tmp/cache.tgz
+          tar -xf /tmp/cache.tgz -C /tmp/magic-nix-cache
+          cat /tmp/magic-nix-cache/magic-nix-cache | xz -d | sudo nix-store --import
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check
       - run: nix build
