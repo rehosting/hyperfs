@@ -2,7 +2,7 @@ pkgs:
 
 let
 
-  libs = [ "fcntl" ];
+  libs = [ "fcntl" "os" ];
 
   manifest = pkgs.writeText "manifest.py" (
     pkgs.lib.concatMapStrings (lib: ''
