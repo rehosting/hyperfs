@@ -9,8 +9,7 @@ jobs:
     runs-on: rehosting-arc
     steps:
       - uses: actions/checkout@v3
-      - name: Install xz
-        run: sudo apt-get install xz-utils curl p7zip-full -y
+      - run: sudo apt-get install xz-utils curl p7zip-full jq -y
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           kvm: false
