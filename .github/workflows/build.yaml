@@ -20,7 +20,7 @@ jobs:
         run: |
           curl -L https://fiids.install.determinate.systems/magic-nix-cache-closure/stable/X64-Linux -o /tmp/cache.7z
           7z x /tmp/cache.7z -o/tmp/magic-nix-cache
-          cat /tmp/magic-nix-cache/magic-nix-cache | xz -d | sudo nix-store --import
+          cat /tmp/magic-nix-cache/magic-nix-cache-X64-Linux | sudo nix-store --import
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check
       - run: nix build
