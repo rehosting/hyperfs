@@ -11,15 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install xz
-        run: sudo apt-get install xz-utils curl -y
+        run: sudo apt-get install xz-utils curl p7zip-full -y
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           kvm: false
           init: none
       - name: Prepare Magic Nix Cache
         run: |
-          curl -L https://fiids.install.determinate.systems/magic-nix-cache-closure/stable/X64-Linux -o /tmp/cache.tgz
-          tar -xf /tmp/cache.tgz -C /tmp/magic-nix-cache
+          curl -L https://fiids.install.determinate.systems/magic-nix-cache-closure/stable/X64-Linux -o /tmp/cache.7z
+          7z x /tmp/cache.7z -o/tmp/magic-nix-cache
           cat /tmp/magic-nix-cache/magic-nix-cache | xz -d | sudo nix-store --import
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check
