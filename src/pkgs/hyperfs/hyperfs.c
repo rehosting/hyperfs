@@ -32,7 +32,7 @@ static const struct fuse_opt option_spec[] = {
 
 #include "passthrough.c"
 
-enum { READ, WRITE, IOCTL };
+enum { READ, WRITE, IOCTL, GETATTR };
 
 enum { DEV_MODE = S_IFREG | 0666, DIR_MODE = S_IFDIR | 0777 };
 
@@ -54,8 +54,37 @@ struct hyperfs_data {
       unsigned int cmd;
       void *data;
     } PACKED ioctl;
+    struct {
+      off_t *size;
+    } PACKED getattr;
   } PACKED;
 } PACKED;
+
+static void page_in_hyperfs_data(struct hyperfs_data *data) {
+  volatile unsigned char x = 0;
+  size_t i;
+  for (i = 0; data->path[i]; i++) {
+    x += data->path[i];
+  }
+  switch (data->type) {
+  case READ:
+    for (i = 0; i < data->read.size; i++) {
+      x += data->read.buf[i];
+    }
+    break;
+  case WRITE:
+    for (i = 0; i < data->write.size; i++) {
+      x += data->write.buf[i];
+    }
+    break;
+  }
+}
+
+static int hyperfs_hypercall(struct hyperfs_data data) {
+  void *s[] = {&data};
+  page_in_hyperfs_data(&data);
+  return hc(MAGIC_VALUE, s, 1);
+}
 
 static void for_each_path(void (*func)(const char *path,
                                        const char *target_path, void *data),
@@ -113,6 +142,11 @@ static int hyperfs_getattr(const char *path, struct stat *st,
     memset(st, 0, sizeof(struct stat));
     st->st_nlink = !strcmp(path, "/") ? 2 : 1;
     st->st_mode = mode;
+    hyperfs_hypercall((struct hyperfs_data){
+      .type = GETATTR,
+      .path = path,
+      .getattr.size = &st->st_size,
+    });
     return 0;
   } else {
     return xmp_getattr(path, st, fi);
@@ -170,52 +204,34 @@ static int hyperfs_truncate(const char *path, off_t offset,
   }
 }
 
-static void page_in_hyperfs_data(struct hyperfs_data *data) {
-  volatile unsigned char x = 0;
-  size_t i;
-  for (i = 0; data->path[i]; i++) {
-    x += data->path[i];
-  }
-  switch (data->type) {
-  case READ:
-    for (i = 0; i < data->read.size; i++) {
-      x += data->read.buf[i];
-    }
-    break;
-  case WRITE:
-    for (i = 0; i < data->write.size; i++) {
-      x += data->write.buf[i];
-    }
-    break;
-  }
-}
-
 static int hyperfs_read(const char *path, char *buf, size_t size, off_t offset,
                         struct fuse_file_info *fi) {
   (void)fi;
 
-  struct hyperfs_data data = {.type = READ,
-                              .path = path,
-                              .read.buf = buf,
-                              .read.size = size,
-                              .read.offset = offset};
-  void *s[] = {&data};
-  return lookup_mode(path) == DEV_MODE ? page_in_hyperfs_data(&data),
-         hc(MAGIC_VALUE, s, 1)         : xmp_read(path, buf, size, offset, fi);
+  return lookup_mode(path) == DEV_MODE
+    ? hyperfs_hypercall((struct hyperfs_data){
+      .type = READ,
+      .path = path,
+      .read.buf = buf,
+      .read.size = size,
+      .read.offset = offset,
+    })
+    : xmp_read(path, buf, size, offset, fi);
 }
 
 static int hyperfs_write(const char *path, const char *buf, size_t size,
                          off_t offset, struct fuse_file_info *fi) {
   (void)fi;
 
-  struct hyperfs_data data = {.type = WRITE,
-                              .path = path,
-                              .write.buf = buf,
-                              .write.size = size,
-                              .write.offset = offset};
-  void *s[] = {&data};
-  return lookup_mode(path) == DEV_MODE ? page_in_hyperfs_data(&data),
-         hc(MAGIC_VALUE, s, 1)         : xmp_write(path, buf, size, offset, fi);
+  return lookup_mode(path) == DEV_MODE
+    ? hyperfs_hypercall((struct hyperfs_data){
+      .type = WRITE,
+      .path = path,
+      .write.buf = buf,
+      .write.size = size,
+      .write.offset = offset,
+    })
+    : xmp_write(path, buf, size, offset, fi);
 }
 
 static int hyperfs_ioctl(const char *path, unsigned int cmd, void *arg,
@@ -225,11 +241,14 @@ static int hyperfs_ioctl(const char *path, unsigned int cmd, void *arg,
   (void)fi;
   (void)flags;
 
-  struct hyperfs_data data = {
-      .type = IOCTL, .path = path, .ioctl.cmd = cmd, .ioctl.data = data_};
-  void *s[] = {&data};
-  return lookup_mode(path) == DEV_MODE ? page_in_hyperfs_data(&data),
-         hc(MAGIC_VALUE, s, 1) : xmp_ioctl(path, cmd, arg, fi, flags, data_);
+  return lookup_mode(path) == DEV_MODE
+    ? hyperfs_hypercall((struct hyperfs_data){
+      .type = IOCTL,
+      .path = path,
+      .ioctl.cmd = cmd,
+      .ioctl.data = data_,
+    })
+    : xmp_ioctl(path, cmd, arg, fi, flags, data_);
 }
 
 static int hyperfs_readlink(const char *path, char *buf, size_t size) {
