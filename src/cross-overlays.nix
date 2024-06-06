@@ -12,4 +12,9 @@
     fuse3 = super.fuse3.override { util-linux = super.emptyDirectory; };
   })
 
+  # The p11-kit tests seem to fail for single-user Nix installs
+  (self: super: {
+    p11-kit = super.p11-kit.overrideAttrs { doCheck = false; };
+  })
+
 ]
