@@ -129,6 +129,7 @@ static int hyperfs_open(const char *path, struct fuse_file_info *fi) {
   if (exists(path)) {
     return 0;
   } else {
+    fi->direct_io = 1;
     return xmp_open(path, fi);
   }
 }
