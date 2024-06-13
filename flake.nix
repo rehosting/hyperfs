@@ -19,7 +19,7 @@
     in rec {
       hyperfs = hyperfsFromPkgs pkgs;
 
-      all-archs = import ./src/build-all-archs.nix { inherit pkgs nixpkgs; }
+      all-archs = import ./src/build-dist.nix { inherit self pkgs nixpkgs; }
         (pkgs: [
           (hyperfsFromPkgs pkgs)
           (pkgs.bash // { iglooName = "bash-unwrapped"; })

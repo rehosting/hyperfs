@@ -19,8 +19,6 @@ jobs:
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check
       - run: nix build
-      - run: cp license result/
-      - run: cp -r src/pkgs/hyperfs results/src
       - run: tar -chzvf hyperfs.tar.gz result
       - uses: reecetech/version-increment@2023.10.1
         id: version

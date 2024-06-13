@@ -1,4 +1,4 @@
-{ nixpkgs, pkgs }:
+{ self, nixpkgs, pkgs }:
 
 let
   archs = import ./archs.nix;
@@ -62,5 +62,9 @@ let
           --output $out/utils/$(basename $util)
 
       done
+
+      # Add source to distribution
+      ln -s ${self} $out/src
+      ln -s $out/src/LICENSE $out/LICENSE
     '';
 in buildDist
