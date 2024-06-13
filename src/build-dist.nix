@@ -1,10 +1,10 @@
-{ self, nixpkgs, pkgs }:
+{ self, pkgs }:
 
 let
   archs = import ./archs.nix;
 
   archPkgs = arch:
-    import nixpkgs {
+    import pkgs.path {
       inherit (pkgs) system;
       crossOverlays = import ./cross-overlays.nix;
       crossSystem = archs.${arch};
