@@ -167,10 +167,10 @@ static int lookup_mode(const char *path) {
 static bool exists(const char *path) { return lookup_mode(path) >= 0; }
 
 static int hyperfs_open(const char *path, struct fuse_file_info *fi) {
+  fi->direct_io = 1;
   if (exists(path)) {
     return 0;
   } else {
-    fi->direct_io = 1;
     return xmp_open(path, fi);
   }
 }
