@@ -29,6 +29,5 @@ pkgs.micropython.overrideAttrs {
   '';
   NIX_CFLAGS_COMPILE = "-Wno-cpp -Wno-clobbered -Wl,--allow-multiple-definition -DMICROPY_NLR_SETJMP=1";
   doCheck = false;
-  checkPhase = "true";
   meta.mainProgram = "micropython";
 }
