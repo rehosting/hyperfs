@@ -180,7 +180,9 @@ static int hyperfs_getattr(const char *path, struct stat *st,
   (void)fi;
   int mode = lookup_mode(path);
 
-  if (mode >= 0) {
+  bool base_dir = strcmp(path, "/dev") == 0 || strcmp(path, "/proc") == 0 || strcmp(path, "/sys") == 0;
+
+  if (mode >= 0 && !base_dir) {
     memset(st, 0, sizeof(struct stat));
     st->st_nlink = !strcmp(path, "/") ? 2 : 1;
     st->st_mode = mode;
