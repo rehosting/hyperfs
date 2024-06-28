@@ -4,7 +4,13 @@
   # Disable libfuse's /etc/mtab handling with util-linux's mount command
   (self: super: {
     fuse3 = super.fuse3.overrideAttrs
-      (o: { mesonFlags = o.mesonFlags ++ [ "-Ddisable-mtab=true" ]; });
+      (o: {
+        # The disable-mtab option is ignored
+        # (https://github.com/libfuse/libfuse/issues/456),
+        # so also disable mtab manually.
+        mesonFlags = o.mesonFlags ++ [ "-Ddisable-mtab=true" ];
+        CFLAGS = "-DIGNORE_MTAB=1";
+      });
   })
 
   # Remove now-unneeded util-linux dependency to speed up build
