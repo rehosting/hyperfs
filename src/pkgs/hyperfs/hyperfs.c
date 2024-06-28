@@ -184,11 +184,13 @@ static int hyperfs_getattr(const char *path, struct stat *st,
     memset(st, 0, sizeof(struct stat));
     st->st_nlink = !strcmp(path, "/") ? 2 : 1;
     st->st_mode = mode;
-    hyperfs_hypercall((struct hyperfs_data){
-      .type = GETATTR,
-      .path = path,
-      .getattr.size = &st->st_size,
-    });
+    if (mode == DEV_MODE) {
+      hyperfs_hypercall((struct hyperfs_data){
+        .type = GETATTR,
+        .path = path,
+        .getattr.size = &st->st_size,
+      });
+    }
     return 0;
   } else {
     return xmp_getattr(path, st, fi);
