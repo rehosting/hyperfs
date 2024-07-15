@@ -3,11 +3,11 @@
     "libhc": {
       "flake": false,
       "locked": {
-        "lastModified": 1717027690,
-        "narHash": "sha256-UGP0SpuRSg3NcZ50RBJWCw0AEPoyLLwOO0Y9fR/7LSU=",
+        "lastModified": 1721058896,
+        "narHash": "sha256-jZ379GQyZpK6gA1AhxcA7oHadmoMMDw3K2zRhTFYyOw=",
         "owner": "panda-re",
         "repo": "libhc",
-        "rev": "7f9f949620045929caf5c6faf51814c8b616ef01",
+        "rev": "ce0c44c48f93a1317a66a80ff36657274ed4d152",
         "type": "github"
       },
       "original": {
