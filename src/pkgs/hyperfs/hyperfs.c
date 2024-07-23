@@ -272,7 +272,7 @@ static int hyperfs_readlink(const char *path, char *buf, size_t size) {
   if (exists(path)) {
     return -EINVAL;
   } else if (!strcmp(path, "/proc/self")) {
-    snprintf(buf, size, "/proc/%d", fuse_get_context()->pid);
+    snprintf(buf, size, "%s/proc/self", options.passthrough_path);
     return 0;
   } else {
     return xmp_readlink(path, buf, size);
