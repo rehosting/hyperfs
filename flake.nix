@@ -29,7 +29,11 @@
           (import ./src/pkgs/micropython.nix pkgs)
         ]);
 
-      default = pkgs.fetchFromGitHub {
+      default = (import pkgs.path {
+        inherit (pkgs) system;
+        crossOverlays = import ./src/cross-overlays.nix;
+        crossSystem = (import ./src/archs.nix).mipseb;
+      }).fetchFromGitHub {
         owner = "micropython";
         repo = "micropython";
         rev = "v1.22.2";
