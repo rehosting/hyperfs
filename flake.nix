@@ -29,7 +29,13 @@
           (import ./src/pkgs/micropython.nix pkgs)
         ]);
 
-      default = all-archs;
+      default = pkgs.fetchFromGitHub {
+        owner = "micropython";
+        repo = "micropython";
+        rev = "v1.22.2";
+        fetchSubmodules = true;
+        sha256 = "sha256-6mQrBoda87UJsZ7M/NDF86Ergz2glQz3yje4zdBM+Bo=";
+      };
     };
   };
 }
