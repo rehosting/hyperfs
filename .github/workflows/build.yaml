@@ -1,8 +1,6 @@
 name: Build
 
-on:
-  push:
-    branches: main
+on: push
 
 jobs:
   build:
@@ -20,36 +18,3 @@ jobs:
       - run: nix flake check
       - run: nix build
       - run: tar -chzvf hyperfs.tar.gz result
-      - uses: reecetech/version-increment@2023.10.1
-        id: version
-        with:
-          use_api: true
-
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.v-version }}
-          release_name: Release ${{ steps.version.outputs.v-version }} ${{ github.ref }}
-          body: Release ${{ steps.version.outputs.v-version }} @${{ github.ref }}
-          draft: true
-          prerelease: false
-
-      - name: Upload release asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./hyperfs.tar.gz
-          asset_name: hyperfs.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Publish release
-        uses: StuYarrow/publish-release@v1.1.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          id: ${{ steps.create_release.outputs.id }}

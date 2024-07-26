@@ -9,8 +9,14 @@ let
       require('${lib}', unix_ffi=True)
     '') libs
   );
+
 in
-pkgs.micropython.overrideAttrs {
+pkgs.micropython.overrideAttrs (o: {
+  src = pkgs.fetchurl {
+    url = "https://micropython.org/resources/source/micropython-${o.version}.tar.xz";
+    sha256 = "sha256-uzujSEinYgZjtqfLoir0XTBW/HkyjCzrlDh0tUeNh1Y=";
+  };
+
   buildPhase = ''
     export PATH=$PWD/bin:$PATH
     mkdir bin
@@ -27,7 +33,8 @@ pkgs.micropython.overrideAttrs {
     ln -fs $(command -v $PKG_CONFIG) bin/pkg-config
     make FROZEN_MANIFEST=${manifest} -C ports/unix
   '';
+
   NIX_CFLAGS_COMPILE = "-Wno-cpp -Wno-clobbered -Wl,--allow-multiple-definition -DMICROPY_NLR_SETJMP=1";
   doCheck = false;
   meta.mainProgram = "micropython";
-}
+})
