@@ -9,6 +9,7 @@ jobs:
     runs-on: rehosting-arc
     steps:
       - uses: actions/checkout@v3
+      - run: sudo apt-get update
       - run: sudo apt-get install xz-utils curl p7zip-full jq sqlite3 -y
       - uses: cachix/install-nix-action@v27
         with:
