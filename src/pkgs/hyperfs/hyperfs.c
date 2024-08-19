@@ -68,6 +68,7 @@ static struct options { const char *passthrough_path; } options;
   { t, offsetof(struct options, p), 1 }
 static const struct fuse_opt option_spec[] = {
     OPTION("--passthrough-path=%s", passthrough_path),
+    FUSE_OPT_END,
 };
 
 #include "passthrough.c"
