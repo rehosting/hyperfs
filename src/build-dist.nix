@@ -66,5 +66,6 @@ let
       # Add source to distribution
       ln -s ${self} $out/src
       ln -s $out/src/LICENSE $out/LICENSE
+      ln -s $out/src/licenses $out/licenses
     '';
 in buildDist
