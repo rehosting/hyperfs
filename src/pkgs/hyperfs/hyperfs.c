@@ -71,6 +71,28 @@ static const struct fuse_opt option_spec[] = {
     FUSE_OPT_END,
 };
 
+static void trace(const char *fmt, ...) {
+  const char *path = getenv("HYPERFS_TRACE_PATH");
+  if (!path) {
+    return;
+  }
+
+  FILE *file = fopen(path, "a");
+  if (!file) {
+    return;
+  }
+
+  va_list args;
+  va_start(args, fmt);
+
+  vfprintf(file, fmt, args);
+  fputc('\n', file);
+
+  va_end(args);
+
+  fclose(file);
+}
+
 #include "passthrough.c"
 
 enum { HYP_FILE_OP, HYP_GET_NUM_HYPERFILES, HYP_GET_HYPERFILE_PATHS };
@@ -106,6 +128,8 @@ struct hyperfs_data {
 } PACKED;
 
 static void page_in_hyperfs_data(struct hyperfs_data *data) {
+  trace("%s(%p)", __func__, data);
+
   volatile unsigned char x = 0;
   size_t i;
   for (i = 0; data->path[i]; i++) {
@@ -126,12 +150,14 @@ static void page_in_hyperfs_data(struct hyperfs_data *data) {
 }
 
 static int hyp_file_op(struct hyperfs_data data) {
+  trace("%s(data)", __func__);
   void *s[] = {&data};
   page_in_hyperfs_data(&data);
   return hc(HYP_FILE_OP, s, 1);
 }
 
 static int lookup_mode(const char *path) {
+  trace("%s(%s)", __func__, path);
   int mode = -1;
   for (size_t i = 0; i < num_hyperfiles; i++) {
     const char *hf_path = hyperfile_paths[i];
@@ -148,6 +174,7 @@ static int lookup_mode(const char *path) {
 static bool exists(const char *path) { return lookup_mode(path) >= 0; }
 
 static int hyperfs_open(const char *path, struct fuse_file_info *fi) {
+  trace("%s(%s, %p)", __func__, path, fi);
   fi->direct_io = 1;
   if (exists(path)) {
     return 0;
@@ -158,7 +185,8 @@ static int hyperfs_open(const char *path, struct fuse_file_info *fi) {
 
 static int hyperfs_getattr(const char *path, struct stat *st,
                            struct fuse_file_info *fi) {
-  (void)fi;
+  trace("%s(%s, st=%p, fi=%p)", __func__, path, st, fi);
+
   int mode = lookup_mode(path);
 
   if (mode >= 0) {
@@ -181,11 +209,9 @@ static int hyperfs_getattr(const char *path, struct stat *st,
 static int hyperfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                            off_t offset, struct fuse_file_info *fi,
                            enum fuse_readdir_flags flags) {
-  int res;
+  trace("%s(%s, buf=%p, filler=%p, offset=%ld, fi=%p)", __func__, path, buf, filler, (long) offset, fi);
 
-  (void)offset;
-  (void)fi;
-  (void)flags;
+  int res;
 
   res = xmp_readdir(path, buf, filler, offset, fi, flags);
   if (lookup_mode(path) != DIR_MODE) {
@@ -217,6 +243,7 @@ static int hyperfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int hyperfs_truncate(const char *path, off_t offset,
                             struct fuse_file_info *fi) {
+  trace("%s(%s, offset=%ld, fi=%p)", __func__, path, (long) offset, fi);
   if (exists(path)) {
     return 0;
   } else {
@@ -226,7 +253,7 @@ static int hyperfs_truncate(const char *path, off_t offset,
 
 static int hyperfs_read(const char *path, char *buf, size_t size, off_t offset,
                         struct fuse_file_info *fi) {
-  (void)fi;
+  trace("%s(%s, buf=%p, size=%zu, offset=%ld, fi=%p)", __func__, path, buf, size, (long) offset, fi);
 
   return lookup_mode(path) == DEV_MODE ? hyp_file_op((struct hyperfs_data){
                                              .type = READ,
@@ -240,7 +267,7 @@ static int hyperfs_read(const char *path, char *buf, size_t size, off_t offset,
 
 static int hyperfs_write(const char *path, const char *buf, size_t size,
                          off_t offset, struct fuse_file_info *fi) {
-  (void)fi;
+  trace("%s(%s, buf=%p, size=%zu, offset=%ld, fi=%p)", __func__, path, buf, size, (long) offset, fi);
 
   return lookup_mode(path) == DEV_MODE ? hyp_file_op((struct hyperfs_data){
                                              .type = WRITE,
@@ -255,10 +282,7 @@ static int hyperfs_write(const char *path, const char *buf, size_t size,
 static int hyperfs_ioctl(const char *path, unsigned int cmd, void *arg,
                          struct fuse_file_info *fi, unsigned int flags,
                          void *data_) {
-  (void)arg;
-  (void)fi;
-  (void)flags;
-
+  trace("%s(%s, cmd=%u, arg=%p, fi=%p, flags=%x, data=%p)", __func__, path, cmd, arg, fi, flags, data_);
   return lookup_mode(path) == DEV_MODE
              ? hyp_file_op((struct hyperfs_data){
                    .type = IOCTL,
@@ -270,6 +294,7 @@ static int hyperfs_ioctl(const char *path, unsigned int cmd, void *arg,
 }
 
 static int hyperfs_readlink(const char *path, char *buf, size_t size) {
+  trace("%s(%s, buf=%s, size=%zu)", __func__, path, buf, size);
   if (exists(path)) {
     return -EINVAL;
   } else if (!strcmp(path, "/proc/self")) {
@@ -281,6 +306,7 @@ static int hyperfs_readlink(const char *path, char *buf, size_t size) {
 }
 
 static int hyperfs_release(const char *path, struct fuse_file_info *fi) {
+  trace("%s(%s, fi=%p)", __func__, path, fi);
   if (exists(path)) {
     return 0;
   } else {
@@ -316,6 +342,7 @@ static const struct fuse_operations fops = {
 };
 
 static void load_hyperfile_paths(void) {
+  trace("%s()", __func__);
   hc(HYP_GET_NUM_HYPERFILES, (void *[]){&num_hyperfiles}, 1);
   hyperfile_paths = calloc(num_hyperfiles, sizeof(*hyperfile_paths));
   for (size_t i = 0; i < num_hyperfiles; i++) {

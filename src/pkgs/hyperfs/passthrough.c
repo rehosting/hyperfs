@@ -48,10 +48,12 @@
  */
 
 static int igloo_rebase_path(const char *src, char *dst) {
-  return snprintf(dst, PATH_MAX, "%s%s", options.passthrough_path, src) <
+  int ret = snprintf(dst, PATH_MAX, "%s%s", options.passthrough_path, src) <
                  PATH_MAX
              ? 0
              : -ENAMETOOLONG;
+  trace("%s(src=%s, dst=%s)", __func__, src, dst);
+  return ret;
 }
 
 /*
