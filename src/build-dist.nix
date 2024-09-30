@@ -32,6 +32,8 @@ let
       # Also edit the interpreter and RPATH to be inside /igloo.
 
       copyDylibs() {
+        local lib_dir
+        local so_name
         for lib_dir in $(IFS=:; echo $(patchelf --print-rpath $2)); do
           for so_name in $(patchelf --print-needed $2); do
             if [ -e $lib_dir/$so_name ]; then
