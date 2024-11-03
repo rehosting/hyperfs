@@ -62,5 +62,5 @@ in pkgs.ltrace.overrideAttrs (prev: {
   # Ltrace doesn't support mips64eb.
   # There is a patch, but it doesn't support this version.
   # https://github.com/openembedded/meta-openembedded/blob/master/meta-oe/recipes-devtools/ltrace/ltrace/0001-Add-support-for-mips64-n32-n64.patch
-  passthru.iglooExcludedArchs = [ "mips64eb" ];
+  passthru.iglooExcludedArchs = [ "mips64eb", "mips64el" ];
 })
