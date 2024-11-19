@@ -58,10 +58,11 @@ let
 
         echo "Switching $util to IGLOO paths"
         mkdir -p $out/utils
+        mkdir -p $out/utils/$arch
         patchelf $util \
           --set-rpath /igloo/dylibs \
           --set-interpreter /igloo/dylibs/$(basename $old_interp) \
-          --output $out/utils/$(basename $util)
+          --output $out/utils/$arch/$(basename -s ".$arch" $util)
 
       done
 
