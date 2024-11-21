@@ -6,7 +6,7 @@ runCommandCC "hyperfs" {
   meta.mainProgram = "hyperfs";
 } ''
   mkdir -p $out/bin
-  $CC -s \
+  $CC -g \
     ${./.}/hyperfs.c \
     `$PKG_CONFIG fuse3 --cflags --libs` \
     -Wall -Wextra -Werror -Wno-sign-compare \
