@@ -132,6 +132,9 @@ static void page_in_hyperfs_data(struct hyperfs_data *data) {
 
   volatile unsigned char x = 0;
   size_t i;
+  for (i = 0; i < sizeof(*data); i++) {
+    x += ((unsigned char *)data)[i];
+  }
   for (i = 0; data->path[i]; i++) {
     x += data->path[i];
   }
