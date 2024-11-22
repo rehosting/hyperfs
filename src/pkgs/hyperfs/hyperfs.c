@@ -154,9 +154,12 @@ static void page_in_hyperfs_data(struct hyperfs_data *data) {
 
 static int hyp_file_op(struct hyperfs_data data) {
   trace("%s(data)", __func__);
-  void *s[] = {&data};
-  page_in_hyperfs_data(&data);
-  return hc(HYP_FILE_OP, s, 1);
+  unsigned long err = RETRY;
+  do {
+    page_in_hyperfs_data(&data);
+    err = igloo_hypercall2(MAGIC_VALUE, HYP_FILE_OP, (unsigned long)&data);
+  } while (err == RETRY);
+  return err;
 }
 
 static int lookup_mode(const char *path) {
