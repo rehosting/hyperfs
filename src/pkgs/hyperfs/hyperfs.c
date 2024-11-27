@@ -189,15 +189,25 @@ static int hyperfs_open(const char *path, struct fuse_file_info *fi) {
   }
 }
 
+// Return whether a path is /proc/self or /proc/PID
+static bool is_proc_pid_path(const char *path)
+{
+  int pid, len;
+  bool is_proc_self = !strcmp(path, "/proc/self");
+  bool is_proc_pid = sscanf(path, "/proc/%d%n", &pid, &len) == 1 && len == strlen(path);
+  return is_proc_self || is_proc_pid;
+}
+
 static int hyperfs_getattr(const char *path, struct stat *st,
                            struct fuse_file_info *fi) {
   trace("%s(%s, st=%p, fi=%p)", __func__, path, st, fi);
 
+  memset(st, 0, sizeof(struct stat));
+  st->st_nlink = !strcmp(path, "/") ? 2 : 1;
+
   int mode = lookup_mode(path);
 
   if (mode >= 0) {
-    memset(st, 0, sizeof(struct stat));
-    st->st_nlink = !strcmp(path, "/") ? 2 : 1;
     st->st_mode = mode;
     if (mode == DEV_MODE) {
       hyp_file_op((struct hyperfs_data){
@@ -206,6 +216,9 @@ static int hyperfs_getattr(const char *path, struct stat *st,
           .getattr.size = &st->st_size,
       });
     }
+    return 0;
+  } else if (is_proc_pid_path(path)) {
+    st->st_mode = S_IFLNK | 0777;
     return 0;
   } else {
     return xmp_getattr(path, st, fi);
@@ -303,8 +316,8 @@ static int hyperfs_readlink(const char *path, char *buf, size_t size) {
   trace("%s(%s, buf=%s, size=%zu)", __func__, path, buf, size);
   if (exists(path)) {
     return -EINVAL;
-  } else if (!strcmp(path, "/proc/self")) {
-    snprintf(buf, size, "%s/proc/self", options.passthrough_path);
+  } else if (is_proc_pid_path(path)) {
+    snprintf(buf, size, "%s%s", options.passthrough_path, path);
     return 0;
   } else {
     return xmp_readlink(path, buf, size);
