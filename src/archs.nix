@@ -26,4 +26,22 @@
     gcc.arch = "mips64r2";
     gcc.abi = "64";
   };
+  ppc = {
+    config = "powerpc-linux-musl";
+  };
+  ppc64 = {
+    config = "powerpc64-linux-musl";
+  };
+  ppc64el = {
+    config = "powerpc64le-linux-musl";
+  };
+  riscv32 = {
+    config = "riscv32-linux-musl";
+  };
+  riscv64 = {
+    config = "riscv64-linux-musl";
+  };
+  loongarch = {
+    config = "loongarch64-linux-musl";
+  };
 }
