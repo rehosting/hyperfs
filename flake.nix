@@ -33,8 +33,6 @@
             (import ./src/pkgs/micropython.nix pkgs)
           ]);
 
-	  mpy = import ./src/pkgs/micropython.nix pkgs;
-
           default = all-archs;
         };
     };
