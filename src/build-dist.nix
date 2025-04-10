@@ -3,34 +3,43 @@
 let
   archs = import ./archs.nix;
 
-  archPkgs = arch:
+  archPkgs =
+    arch:
     import pkgs.path {
       inherit (pkgs) system;
       crossOverlays = import ./cross-overlays.nix;
       crossSystem = archs.${arch};
-      config = {
-        allowUnsupportedSystem = true;
-      };
+      config.allowUnsupportedSystem = true;
     };
 
   iglooName = pkg: pkg.iglooName or pkg.meta.mainProgram;
 
-  buildUtils = drvs:
+  buildUtils =
+    drvs:
     let
 
-      pkgArchPairs = builtins.filter
-        ({ pkg, arch }: !builtins.elem arch pkg.iglooExcludedArchs or [ ])
-        (pkgs.lib.flatten
-          (map (arch: map (pkg: { inherit pkg arch; }) (drvs (archPkgs arch)))
-            (builtins.attrNames archs)));
-    in pkgs.linkFarm "utils" (map ({ pkg, arch }: {
-      name = "${iglooName pkg}.${arch}";
-      path = pkgs.lib.getExe pkg;
-    }) pkgArchPairs);
+      pkgArchPairs = builtins.filter ({ pkg, arch }: !builtins.elem arch pkg.iglooExcludedArchs or [ ]) (
+        pkgs.lib.flatten (
+          map (arch: map (pkg: { inherit pkg arch; }) (drvs (archPkgs arch))) (builtins.attrNames archs)
+        )
+      );
+    in
+    pkgs.linkFarm "utils" (
+      map (
+        { pkg, arch }:
+        {
+          name = "${iglooName pkg}.${arch}";
+          path = pkgs.lib.getExe pkg;
+        }
+      ) pkgArchPairs
+    );
 
-  buildDist = drvs:
-    let utils = buildUtils drvs;
-    in pkgs.runCommand "dist" { } ''
+  buildDist =
+    drvs:
+    let
+      utils = buildUtils drvs;
+    in
+    pkgs.runCommand "dist" { } ''
       # Collect and copy libraries for the utils.
       # Also edit the interpreter and RPATH to be inside /igloo.
 
@@ -74,4 +83,5 @@ let
       ln -s $out/src/LICENSE $out/LICENSE
       ln -s $out/src/licenses $out/licenses
     '';
-in buildDist
+in
+buildDist

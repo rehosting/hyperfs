@@ -2,13 +2,13 @@ pkgs:
 
 let
 
-  libs = [ "fcntl" "os" ];
+  manifest = pkgs.writeText "manifest.py"
+   ''
+     add_library("unix-ffi", "$(MPY_LIB_DIR)/unix-ffi")
+     require("fcntl")
+     require("os")
+   '';
 
-  manifest = pkgs.writeText "manifest.py" (
-    pkgs.lib.concatMapStrings (lib: ''
-      require('${lib}', unix_ffi=True)
-    '') libs
-  );
 in
 pkgs.micropython.overrideAttrs {
   buildPhase = ''
