@@ -14,7 +14,9 @@ jobs:
       - uses: cachix/install-nix-action@v27
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-          extra_nix_config: "max-jobs = 8"
+          extra_nix_config: |
+            max-jobs = 8
+            cores = 8
       - uses: nix-community/cache-nix-action@v5
         with:
           primary-key: ${{ runner.os }}-nix-store
