@@ -11,7 +11,12 @@
   outputs = { self, nixpkgs, libhc }: {
     packages.x86_64-linux = let
 
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      pkgs = import nixpkgs {
+        system = "x86_64-linux";
+        config = {
+          allowUnsupportedSystem = true;
+        };
+      };
 
       hyperfsFromPkgs = pkgs:
         pkgs.callPackage ./src/pkgs/hyperfs { inherit libhc; };

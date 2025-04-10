@@ -8,6 +8,9 @@ let
       inherit (pkgs) system;
       crossOverlays = import ./cross-overlays.nix;
       crossSystem = archs.${arch};
+      config = {
+        allowUnsupportedSystem = true;
+      };
     };
 
   iglooName = pkg: pkg.iglooName or pkg.meta.mainProgram;
