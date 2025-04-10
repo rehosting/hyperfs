@@ -2,12 +2,11 @@ pkgs:
 
 let
 
-  manifest = pkgs.writeText "manifest.py"
-   ''
-     add_library("unix-ffi", "$(MPY_LIB_DIR)/unix-ffi")
-     require("fcntl")
-     require("os")
-   '';
+  manifest = pkgs.writeText "manifest.py" ''
+    add_library("unix-ffi", "$(MPY_LIB_DIR)/unix-ffi")
+    require("fcntl")
+    require("os")
+  '';
 
 in
 pkgs.micropython.overrideAttrs {
