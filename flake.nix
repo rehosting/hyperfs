@@ -16,6 +16,10 @@
       hyperfsFromPkgs = pkgs:
         pkgs.callPackage ./src/pkgs/hyperfs { inherit libhc; };
 
+      overlays = [
+        (import ./src/cross-overlays.nix)
+      ];
+
     in rec {
       hyperfs = hyperfsFromPkgs pkgs;
 

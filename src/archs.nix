@@ -43,5 +43,7 @@
   };
   loongarch = {
     config = "loongarch64-linux-musl";
+    gcc.arch = "loongarch64";
+    gcc.abi = "lp64";
   };
 }
