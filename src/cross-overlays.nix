@@ -45,7 +45,10 @@
   (self: super: {
     linux-headers = super.linux-headers.overrideAttrs (oldAttrs: {
       meta = oldAttrs.meta // {
-        platforms = oldAttrs.meta.platforms ++ [ "powerpc-linux" ];
+        platforms = oldAttrs.meta.platforms ++ [ 
+          "powerpc-linux"
+          "loongarch64-linux" 
+        ];
       };
     });
   })
@@ -57,6 +60,8 @@
         platforms = oldAttrs.meta.platforms ++ [
           "powerpc-linux"
           "powerpc-linux-musl"
+          "loongarch64-linux"
+          "loongarch64-linux-musl"
         ];
       };
     });
