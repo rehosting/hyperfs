@@ -26,6 +26,13 @@
     gcc.arch = "mips64r2";
     gcc.abi = "64";
   };
+  ppc = {
+    config = "powerpc-linux-musl";
+    gcc.fno-use-cxa-atexit = true;
+    gcc.fno-threadsafe-statics = true;
+    gcc.fno-extern-tls-init = true;
+    gcc.cflags = "-fno-use-linker-plugin";
+  };
   ppc64 = {
     config = "powerpc64-linux-musl";
     gcc.abi = "elfv2";
