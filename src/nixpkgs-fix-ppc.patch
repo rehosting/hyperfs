@@ -1,0 +1,39 @@
+diff --git a/pkgs/build-support/cc-wrapper/default.nix b/pkgs/build-support/cc-wrapper/default.nix
+index 692474d48c42..3f34ee62380d 100644
+--- a/pkgs/build-support/cc-wrapper/default.nix
++++ b/pkgs/build-support/cc-wrapper/default.nix
+@@ -788,6 +788,9 @@ stdenvNoCC.mkDerivation {
+     + optionalString (targetPlatform.libc == "musl" && targetPlatform.isx86_32) ''
+       hardening_unsupported_flags+=" stackprotector"
+     ''
++    + optionalString (targetPlatform.libc == "musl" && targetPlatform.isPower && targetPlatform.is32bit) ''
++      hardening_unsupported_flags+=" stackprotector"
++    ''
+     + optionalString targetPlatform.isNetBSD ''
+       hardening_unsupported_flags+=" stackprotector fortify"
+     ''
+diff --git a/pkgs/development/compilers/gcc/common/libgcc-buildstuff.nix b/pkgs/development/compilers/gcc/common/libgcc-buildstuff.nix
+index 5c72e0dbdf05..3ce8b032d5b5 100644
+--- a/pkgs/development/compilers/gcc/common/libgcc-buildstuff.nix
++++ b/pkgs/development/compilers/gcc/common/libgcc-buildstuff.nix
+@@ -28,7 +28,7 @@ let
+   # gcc-built `{e,n}crt{n,i}.o` instead of failing to find the
+   # versions which have been repackaged in libc as `crt{n,i}.o`
+   #
+-  SHLIB_LC = lib.optionalString stdenv.targetPlatform.isPower "-mnewlib";
++  SHLIB_LC = lib.optionalString stdenv.targetPlatform.isPower "-mnewlib -Wl,--allow-multiple-definition";
+ 
+ in
+ ''
+diff --git a/pkgs/development/libraries/openssl/default.nix b/pkgs/development/libraries/openssl/default.nix
+index 3fb0961c6d38..4ee4af85ad0f 100644
+--- a/pkgs/development/libraries/openssl/default.nix
++++ b/pkgs/development/libraries/openssl/default.nix
+@@ -118,6 +118,7 @@ let
+           x86_64-linux = "./Configure linux-x86_64";
+           x86_64-solaris = "./Configure solaris64-x86_64-gcc";
+           powerpc64-linux = "./Configure linux-ppc64";
++          powerpc-linux = "./Configure linux-ppc";
+           riscv32-linux = "./Configure ${
+             if lib.versionAtLeast version "3.2" then "linux32-riscv32" else "linux-latomic"
+           }";

@@ -70,6 +70,7 @@ pkgs.ltrace.overrideAttrs (prev: {
     "riscv64"
     "riscv32"
     "loongarch"
+    "ppc"
     "ppc64"
     "ppc64el"
   ];

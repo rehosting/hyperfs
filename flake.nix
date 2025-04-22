@@ -18,8 +18,20 @@
       packages.x86_64-linux =
         let
 
-          pkgs = import nixpkgs {
-            system = "x86_64-linux";
+          system = "x86_64-linux";
+
+          nixpkgs-patched =
+            (import nixpkgs {
+              inherit system;
+            }).applyPatches
+              {
+                name = "nixpkgs-patched";
+                src = nixpkgs;
+                patches = [ ./src/nixpkgs-fix-ppc.patch ];
+              };
+
+          pkgs = import nixpkgs-patched {
+            inherit system;
             config.allowUnsupportedSystem = true;
           };
 
