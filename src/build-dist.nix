@@ -61,6 +61,13 @@ let
         arch=''${util##*.}
         mkdir -p $out/dylibs/$arch
         old_interp=$(patchelf $util --print-interpreter)
+        new_interp=/igloo/dylibs/$(basename $old_interp)
+
+        # Pad string so new interpreter path is the same length as the old one
+        new_interp_padded=$new_interp
+        while [ ''${#new_interp_padded} -lt ''${#old_interp} ]; do
+          new_interp_padded="/$new_interp_padded"
+        done
 
         echo "Collecting interpreter from $util"
         ln -sf $old_interp $out/dylibs/$arch/$(basename $old_interp)
@@ -69,12 +76,13 @@ let
         copyDylibs $arch $util
 
         echo "Switching $util to IGLOO paths"
-        mkdir -p $out/utils
-        mkdir -p $out/utils/$arch
+        util_out_path=$out/utils/$arch/$(basename -s ".$arch" $util)
+        mkdir -p $(dirname $util_out_path)
         patchelf $util \
           --set-rpath /igloo/dylibs \
-          --set-interpreter /igloo/dylibs/$(basename $old_interp) \
-          --output $out/utils/$arch/$(basename -s ".$arch" $util)
+          --output $util_out_path
+        # Hack to avoid unaligned pointer bug with patchelf and MIPS
+        sed -i "s,$old_interp,$new_interp_padded,g" $util_out_path
 
       done
 
