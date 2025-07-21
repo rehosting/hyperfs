@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: github-bigger
+    runs-on: github-medium
     steps:
       - uses: actions/checkout@v3
       - run: sudo apt-get update
