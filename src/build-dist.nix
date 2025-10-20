@@ -71,6 +71,8 @@ let
 
         echo "Collecting interpreter from $util"
         ln -sf $old_interp $out/dylibs/$arch/$(basename $old_interp)
+        # Create a generic symlink for easier reference
+        ln -sf $(basename $old_interp) $out/dylibs/$arch/ld-musl.so.1
 
         echo "Collecting library dependencies from $util"
         copyDylibs $arch $util
