@@ -10,5 +10,4 @@ pkgs.gdbHostCpuOnly.overrideAttrs (self: {
         --replace '_ABIO32' '1'
     '';
   meta.mainProgram = "gdbserver";
-  passthru.iglooExcludedArchs = [ "loongarch" ];
 })

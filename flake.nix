@@ -27,7 +27,7 @@
               {
                 name = "nixpkgs-patched";
                 src = nixpkgs;
-                patches = [ ./src/nixpkgs-fix-ppc.patch ];
+                patches = [ ./src/patches/nixpkgs-fix-ppc.patch ];
               };
 
           pkgs = import nixpkgs-patched {

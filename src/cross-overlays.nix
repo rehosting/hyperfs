@@ -22,4 +22,12 @@
     p11-kit = super.p11-kit.overrideAttrs { doCheck = false; };
   })
 
+  # Fix musl+loongarch+gdb build
+  # https://www.openwall.com/lists/musl/2024/08/02/1
+  (self: super: {
+    musl = super.musl.overrideAttrs (o: {
+      patches = o.patches or [ ] ++ [ ./patches/musl-loongarch-regset.patch ];
+    });
+  })
+
 ]
