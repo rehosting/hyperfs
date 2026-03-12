@@ -30,4 +30,9 @@
     });
   })
 
+  # Disable unused and/or broken-on-some-platforms elfutils features
+  (self: super: {
+    elfutils = super.elfutils.override { enableDebuginfod = false; };
+  })
+
 ]
