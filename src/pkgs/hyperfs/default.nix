@@ -4,7 +4,6 @@
   fuse3,
   pkg-config,
   autoreconfHook,
-  libhc,
 }:
 
 runCommandCC "hyperfs"
@@ -19,5 +18,5 @@ runCommandCC "hyperfs"
       ${./.}/hyperfs.c \
       `$PKG_CONFIG fuse3 --cflags --libs` \
       -Wall -Wextra -Werror -Wno-sign-compare \
-      -I${libhc} -o $out/bin/hyperfs
+      -o $out/bin/hyperfs
   ''

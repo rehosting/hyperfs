@@ -1,21 +1,5 @@
 {
   "nodes": {
-    "libhc": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1746116303,
-        "narHash": "sha256-hmqYiqk30CJWRJXcl9AJRJsn8VKeWtMytyaPEbY+gew=",
-        "owner": "panda-re",
-        "repo": "libhc",
-        "rev": "b2f2efbd948faca9e242ae410e035c0065ec433a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "panda-re",
-        "repo": "libhc",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1773201692,
@@ -32,7 +16,6 @@
     },
     "root": {
       "inputs": {
-        "libhc": "libhc",
         "nixpkgs": "nixpkgs"
       }
     }

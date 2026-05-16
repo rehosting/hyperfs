@@ -1,18 +1,10 @@
 {
-  description = "Hypercall-based FUSE filesystem";
-
-  inputs = {
-    libhc = {
-      url = "github:panda-re/libhc";
-      flake = false;
-    };
-  };
+  description = "Portalcall-based FUSE filesystem";
 
   outputs =
     {
       self,
       nixpkgs,
-      libhc,
     }:
     {
       packages.x86_64-linux =
