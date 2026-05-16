@@ -57,7 +57,7 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 
-#include "hypercall.h"
+#include "portalcall.h"
 
 static size_t num_hyperfiles;
 static char **hyperfile_paths;
@@ -157,7 +157,7 @@ static int hyp_file_op(struct hyperfs_data data) {
   unsigned long err = RETRY;
   do {
     page_in_hyperfs_data(&data);
-    err = igloo_hypercall2(MAGIC_VALUE, HYP_FILE_OP, (unsigned long)&data);
+    err = portal_call2(MAGIC_VALUE, HYP_FILE_OP, (unsigned long)&data);
   } while (err == RETRY);
   return err;
 }
@@ -362,12 +362,12 @@ static const struct fuse_operations fops = {
 
 static void load_hyperfile_paths(void) {
   trace("%s()", __func__);
-  hc(HYP_GET_NUM_HYPERFILES, (void *[]){&num_hyperfiles}, 1);
+  portal_hc(HYP_GET_NUM_HYPERFILES, (void *[]){&num_hyperfiles}, 1);
   hyperfile_paths = calloc(num_hyperfiles, sizeof(*hyperfile_paths));
   for (size_t i = 0; i < num_hyperfiles; i++) {
     hyperfile_paths[i] = calloc(HYPERFILE_PATH_MAX, 1);
   }
-  hc(HYP_GET_HYPERFILE_PATHS, (void **)hyperfile_paths, num_hyperfiles);
+  portal_hc(HYP_GET_HYPERFILE_PATHS, (void **)hyperfile_paths, num_hyperfiles);
 }
 
 int main(int argc, char *argv[]) {
