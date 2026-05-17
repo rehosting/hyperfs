@@ -37,7 +37,9 @@
 
         in
         rec {
-          all-archs = import ./src/build-dist.nix { inherit self pkgs; } (pkgs: [
+          hyperfs = pkgs.callPackage ./src/pkgs/hyperfs { inherit libhc; };
+
+          dist = import ./src/build-dist.nix { inherit self pkgs; } (pkgs: [
             (pkgs.bash // { iglooName = "bash-unwrapped"; })
             (import ./src/pkgs/strace.nix pkgs)
             (import ./src/pkgs/gdbserver.nix pkgs)
@@ -45,7 +47,9 @@
             (import ./src/pkgs/micropython.nix pkgs)
           ]);
 
-          default = all-archs;
+          all-archs = dist;
+
+          default = hyperfs;
         };
     };
 }
