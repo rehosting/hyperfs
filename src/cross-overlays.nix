@@ -22,6 +22,13 @@
     p11-kit = super.p11-kit.overrideAttrs { doCheck = false; };
   })
 
+  # GnuTLS' docs build runs generated target binaries such as lt-errcodes.
+  (self: super: {
+    gnutls = super.gnutls.overrideAttrs (o: {
+      configureFlags = (o.configureFlags or [ ]) ++ [ "--disable-doc" ];
+    });
+  })
+
   # Fix musl+loongarch+gdb build
   # https://www.openwall.com/lists/musl/2024/08/02/1
   (self: super: {
