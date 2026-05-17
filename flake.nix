@@ -35,6 +35,8 @@
             (import ./src/pkgs/gdbserver.nix pkgs)
             (import ./src/pkgs/ltrace.nix pkgs)
             (import ./src/pkgs/micropython.nix pkgs)
+            (import ./src/pkgs/iptables-legacy.nix pkgs)
+            (import ./src/pkgs/iptables-nft.nix pkgs)
           ]);
 
           default = all-archs;
