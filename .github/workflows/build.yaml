@@ -3,6 +3,8 @@ name: Build
 on:
   push:
     branches: main
+  pull_request:
+    branches: main
 
 jobs:
   build:
@@ -30,6 +32,7 @@ jobs:
           use_api: true
 
       - name: Create release
+        if: github.event_name == 'push'
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -42,6 +45,7 @@ jobs:
           prerelease: false
 
       - name: Upload release asset
+        if: github.event_name == 'push'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,6 +56,7 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Publish release
+        if: github.event_name == 'push'
         uses: StuYarrow/publish-release@v1.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
