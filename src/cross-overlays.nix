@@ -22,6 +22,13 @@
     p11-kit = super.p11-kit.overrideAttrs { doCheck = false; };
   })
 
+  # OpenSSL's 04-test_bio_dgram.t fails in restricted CI sandboxes that lack
+  # proper DGRAM/IPv6 loopback.  Skip the test phase rather than carry an
+  # upstream-specific patch.
+  (self: super: {
+    openssl = super.openssl.overrideAttrs { doCheck = false; };
+  })
+
   # GnuTLS' docs build runs generated target binaries such as lt-errcodes,
   # which fails when cross-compiling.  Disable the build and also drop the
   # devdoc/man outputs, otherwise nix fails with "failed to produce output
