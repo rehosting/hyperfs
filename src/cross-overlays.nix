@@ -24,12 +24,15 @@
 
   # GnuTLS' docs build runs generated target binaries such as lt-errcodes,
   # which fails when cross-compiling.  Disable the build and also drop the
-  # devdoc output, otherwise nix fails with "failed to produce output path
-  # for output 'devdoc'" since the directory is never created.
+  # devdoc/man outputs, otherwise nix fails with "failed to produce output
+  # path for output 'devdoc'" / "'man'" since the directories are never
+  # created.
   (self: super: {
     gnutls = super.gnutls.overrideAttrs (o: {
       configureFlags = (o.configureFlags or [ ]) ++ [ "--disable-doc" ];
-      outputs = builtins.filter (x: x != "devdoc") (o.outputs or [ "out" ]);
+      outputs = builtins.filter
+        (x: !(builtins.elem x [ "devdoc" "man" ]))
+        (o.outputs or [ "out" ]);
     });
   })
 
