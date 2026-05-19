@@ -13,16 +13,25 @@ jobs:
   build:
     runs-on: rehosting-arc
     steps:
+      - uses: actions/checkout@v3
+      - run: sudo apt-get update
+      - run: sudo apt-get install xz-utils curl p7zip-full jq sqlite3 -y
+      - uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            max-jobs = 8
+            cores = 8
+      # install-nix-action writes /etc/nix/nix.conf as root; loosen perms so
+      # the runner user (used by cachix-action) can append substituter lines.
+      - run: sudo chmod 666 /etc/nix/nix.conf
       - uses: cachix/cachix-action@v17
         with:
           name: rehosting
           authToken: ${{ secrets.CACHIX_REHOSTING }}
-      - uses: actions/checkout@v3
-      - run: sudo apt-get update
-      - run: sudo apt-get install xz-utils curl p7zip-full jq sqlite3 -y
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check
-      - run: nix build --max-jobs 8 --cores 8
+      - run: nix build
       - run: tar -chzvf hyperfs.tar.gz result
       - uses: reecetech/version-increment@2023.10.1
         id: version
