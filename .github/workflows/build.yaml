@@ -19,6 +19,10 @@ jobs:
           extra_nix_config: |
             max-jobs = 8
             cores = 8
+      - uses: cachix/cachix-action@v17
+        with:
+          name: rehosting
+          authToken: ${{ secrets.CACHIX_REHOSTING }}
       - uses: nix-community/cache-nix-action@v5
         with:
           primary-key: ${{ runner.os }}-nix-store
