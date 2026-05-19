@@ -52,12 +52,13 @@
   })
 
   # Disable unused and/or broken-on-some-platforms elfutils features, and
-  # ensure pkg-config is available at build time (the configure script
-  # needs it to locate zlib/bzip2/lzma/zstd; for cross builds nixpkgs
-  # doesn't always inject it automatically).
+  # ensure pkg-config is available at build time.  Must use
+  # buildPackages.pkg-config (the build-host variant) rather than
+  # self.pkg-config — the latter is the cross/target pkg-config and the
+  # build sandbox can't execute it.
   (self: super: {
     elfutils = (super.elfutils.override { enableDebuginfod = false; }).overrideAttrs (o: {
-      nativeBuildInputs = (o.nativeBuildInputs or [ ]) ++ [ self.pkg-config ];
+      nativeBuildInputs = (o.nativeBuildInputs or [ ]) ++ [ self.buildPackages.pkg-config ];
     });
   })
 
