@@ -20,6 +20,8 @@ jobs:
             max-jobs = 8
             cores = 8
       - uses: cachix/cachix-action@v17
+        env:
+          USER: root
         with:
           name: rehosting
           authToken: ${{ secrets.CACHIX_REHOSTING }}
