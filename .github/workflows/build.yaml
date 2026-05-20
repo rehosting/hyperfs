@@ -32,7 +32,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_REHOSTING }}
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check
-      - run: nix build
+      - run: nix build -L
       - run: tar -chzvf hyperfs.tar.gz result
       - uses: reecetech/version-increment@2023.10.1
         id: version
