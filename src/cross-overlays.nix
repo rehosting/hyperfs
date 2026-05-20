@@ -22,10 +22,24 @@
     p11-kit = super.p11-kit.overrideAttrs { doCheck = false; };
   })
 
-  # GnuTLS' docs build runs generated target binaries such as lt-errcodes.
+  # OpenSSL's 04-test_bio_dgram.t fails in restricted CI sandboxes that lack
+  # proper DGRAM/IPv6 loopback.  Skip the test phase rather than carry an
+  # upstream-specific patch.
+  (self: super: {
+    openssl = super.openssl.overrideAttrs { doCheck = false; };
+  })
+
+  # GnuTLS' docs build runs generated target binaries such as lt-errcodes,
+  # which fails when cross-compiling.  Disable the build and also drop the
+  # devdoc/man outputs, otherwise nix fails with "failed to produce output
+  # path for output 'devdoc'" / "'man'" since the directories are never
+  # created.
   (self: super: {
     gnutls = super.gnutls.overrideAttrs (o: {
       configureFlags = (o.configureFlags or [ ]) ++ [ "--disable-doc" ];
+      outputs = builtins.filter
+        (x: !(builtins.elem x [ "devdoc" "man" ]))
+        (o.outputs or [ "out" ]);
     });
   })
 
@@ -37,9 +51,15 @@
     });
   })
 
-  # Disable unused and/or broken-on-some-platforms elfutils features
+  # Disable unused and/or broken-on-some-platforms elfutils features, and
+  # ensure pkg-config is available at build time.  Must use
+  # buildPackages.pkg-config (the build-host variant) rather than
+  # self.pkg-config — the latter is the cross/target pkg-config and the
+  # build sandbox can't execute it.
   (self: super: {
-    elfutils = super.elfutils.override { enableDebuginfod = false; };
+    elfutils = (super.elfutils.override { enableDebuginfod = false; }).overrideAttrs (o: {
+      nativeBuildInputs = (o.nativeBuildInputs or [ ]) ++ [ self.buildPackages.pkg-config ];
+    });
   })
 
 ]
